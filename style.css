@@ -1,0 +1,35 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #222;
+}
+
+#controls {
+    text-align: center;
+    margin: 1%;
+}
+
+#scale_display {
+    font-family: "courier new", sans-serif;
+    font-size: 3rem;
+    color: white;
+    text-align: center;
+    margin: 1rem;
+}
+
+canvas {
+    background: transparent;
+    position: absolute;
+}
+
+#canvas1 {
+    z-index: 0;
+}
+
+#canvas2 {
+    z-index: 1;
+}
