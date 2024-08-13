@@ -8,29 +8,35 @@
 </head>
 <body>
     <div id="controls">
-        <select id="select_natural" onchange="refreshScale()">
-            <option value="C" selected>C</option>
-            <option value="D">D</option>
-            <option value="E">E</option>
-            <option value="F">F</option>
-            <option value="G">G</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-        </select>
-        <select id="select_accidental" onchange="refreshScale()">
-            <option value=1>♯</option>
-            <option value=0 selected>♮</option>
-            <option value=-1>♭</option>
-        </select>
-        <select id="select_scale" onchange="refreshScale()">
-            <option value="1" selected>Ionian (Major)</option>
-            <option value="2">Dorian</option>
-            <option value="3">Phrygian</option>
-            <option value="4">Lydian</option>
-            <option value="5">Mixolydian</option>
-            <option value="6">Aeolian (Minor)</option>
-            <option value="7">Locrian</option>
-        </select>
+        <div id="custom_strings">
+            <input id="strings_text" value="E A D G B E">
+            <button id="strings_submit" onclick="changeStrings()">Change</button>
+        </div>
+        <div id="scale_select">
+            <select id="select_natural" onchange="refreshScale()">
+                <option value="C" selected>C</option>
+                <option value="D">D</option>
+                <option value="E">E</option>
+                <option value="F">F</option>
+                <option value="G">G</option>
+                <option value="A">A</option>
+                <option value="B">B</option>
+            </select>
+            <select id="select_accidental" onchange="refreshScale()">
+                <option value=1>♯</option>
+                <option value=0 selected>♮</option>
+                <option value=-1>♭</option>
+            </select>
+            <select id="select_scale" onchange="refreshScale()">
+                <option value="1" selected>Ionian (Major)</option>
+                <option value="2">Dorian</option>
+                <option value="3">Phrygian</option>
+                <option value="4">Lydian</option>
+                <option value="5">Mixolydian</option>
+                <option value="6">Aeolian (Minor)</option>
+                <option value="7">Locrian</option>
+            </select>
+        </div>
     </div>
     <div id="scale_display"></div>
     <canvas id="canvas1"></canvas>

@@ -3,22 +3,24 @@ document.addEventListener('DOMContentLoaded', drawFretboard);
 document.addEventListener('DOMContentLoaded', refreshScale);
 
 const canvas1 = document.getElementById('canvas1');
-canvas1.setAttribute("width", window.innerWidth+"");
-canvas1.setAttribute("height", "400");
+canvas1.setAttribute("width", window.innerWidth-20+"");
+canvas1.setAttribute("height", window.innerHeight+"");
 const ctx1 = canvas1.getContext('2d');
 
 const canvas2 = document.getElementById('canvas2');
-canvas2.setAttribute("width", window.innerWidth+"");
-canvas2.setAttribute("height", "400");
+canvas2.setAttribute("width", window.innerWidth-20+"");
+canvas2.setAttribute("height", window.innerHeight+"");
 const ctx2 = canvas2.getContext('2d');
 
 const scaleDisplay = document.getElementById("scale_display");
 scaleDisplay.style.fontSize = 1 + (innerWidth / 1000) + "rem";
 
+const customStrings = document.getElementById("strings_text");
+
 // Hier kunnen snaren worden toegevoegd of worden verwijderd.
 // "flatSharp" geeft aan of een toon verhoogd of verlaagd is.
 // Als je een Bb snaar toe wilt voegen schrijf je dus: B, -1.
-const TUNING = [
+let tuning = [
     new Tone("E", 0),
     new Tone("B", 0),
     new Tone("G", 0),
@@ -35,7 +37,9 @@ const FRETBOARD_Y = 10;
 
 const FRETBOARD_MARGIN = 5;
 const FRETBOARD_WIDTH = window.innerWidth - FRETBOARD_MARGIN;
-const FRETBOARD_HEIGHT = FRETBOARD_WIDTH / 10 + 90;
+const STRING_SPACING = 40;
+let fretboardHeight = tuning.length * STRING_SPACING;
+const FRETBOARD_COLOR = "#000";
 
 const STRING_EDGE_SPACE = 15;
 const STRING_COLOR = "#FFF";
@@ -52,18 +56,18 @@ const INLAY_SIZE = 10;
 const INLAY_COLOR = "#666";
 const INLAY_TEXT_COLOR = "#FFF";
 
-const FB_NR_SPACING = 35;
+const FB_NR_SPACING = 40;
 const POS_NR_FONT = "2rem courier new";
 const POS_NR_OFFSET = -8;
 const DOUBLE_D_OFFSET = -6;
 
-const FRET_Xs = calcFretXs();
-const TONE_Xs = calcToneXs();
-const STRING_Ys = calcStringYs();
+let fretXs = calcFretXs();
+let toneXs = calcToneXs();
+let stringYs = calcStringYs();
 
 const LEGEND_SPACING = 70;
 const LEGEND_X = (innerWidth / 2) - (LEGEND_SPACING * COLOR_SCHEME.length / 2);
-const LEGEND_Y = FRETBOARD_HEIGHT + FB_NR_SPACING + 50;
+let legendY = fretboardHeight + FB_NR_SPACING + 50;
 const LEGEND_FONT = "2rem courier new";
 const ROOT_RING_COLOR = "#fff";
 const ROOT_RING_WIDTH = 3;
@@ -74,46 +78,111 @@ const LABEL_TEXT_Y_OFFSET = 10;
 const LABEL_TEXT_COLOR = "#FFF";
 const LABEL_TEXT_FONT = (innerWidth / 1500) + 1 + "rem courier new";
 
+function validateCustomStrings() {
+    let splitArray = customStrings.value.trim().split(" ");
+
+    for (let i = 0; i < splitArray.length; i++) {
+        if (splitArray[i].length === 0) {
+            return false;
+        }
+        if (!("ABCDEFGabcdefg".includes(splitArray[i][0]))) {
+            return false;
+        }
+        if (splitArray[i].length > 1) {
+            if (splitArray[i][1] === "b") {
+                for (let j = 1; j < splitArray[i].length; j++) {
+                    if (splitArray[i][j] != "b") {
+                        return false;
+                    }
+                }
+            }
+            else if (splitArray[i][1] === "#") {
+                for (let j = 1; j < splitArray[i].length; j++) {
+                    if (splitArray[i][j] != "#") {
+                        return false;
+                    }
+                }
+            } else {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function changeStrings() {
+    if (validateCustomStrings()) {
+        let splitArray = customStrings.value.trim().split(" ");
+        let toneArray = [];
+        for (let i = 0; i < splitArray.length; i++) {
+            let str = splitArray[i];
+            let natural = str[0].toUpperCase();
+            let flatsharp = 0;
+            if (str.length > 1) {
+                flatsharp = str[1] == "b" ? -str.length+1 : str.length-1;
+            }
+            toneArray.unshift(new Tone(natural, flatsharp));
+        }
+        tuning = toneArray;
+        refreshAll();
+    } else {
+        customStrings.value = "";
+        customStrings.placeholder = "wrong format! (use:B Eb A#)";
+    }
+}
+
+function refreshAll() {
+    ctx1.clearRect(0, 0, innerWidth, innerHeight);
+    fretboardHeight = tuning.length * STRING_SPACING;
+    legendY = fretboardHeight + FB_NR_SPACING + 50;
+    fretXs = calcFretXs();
+    toneXs = calcToneXs();
+    stringYs = calcStringYs();
+    drawFretboard();
+    refreshScale();
+}
+
 function drawFretboard() {
+    ctx1.fillStyle = FRETBOARD_COLOR;
     ctx1.beginPath();
-    ctx1.fillRect(FRETBOARD_X, FRETBOARD_Y, FRETBOARD_WIDTH, FRETBOARD_HEIGHT);
+    ctx1.fillRect(FRETBOARD_X, FRETBOARD_Y, FRETBOARD_WIDTH, fretboardHeight);
     ctx1.fillStyle = FRET_COLOR;
     for (let i = 0; i < calcFretXs().length; i++) {
-        ctx1.fillRect(FRET_Xs[i], FRETBOARD_Y, FRET_SIZE, FRETBOARD_HEIGHT);
+        ctx1.fillRect(fretXs[i], FRETBOARD_Y, FRET_SIZE, fretboardHeight);
     }
     ctx1.font = POS_NR_FONT;
     for (let i = 0; i < INLAY_POSITIONS.length; i++) {
         ctx1.fillStyle = INLAY_COLOR;
         if (INLAY_POSITIONS[i] === OCTAVE_FRET) {
             ctx1.beginPath();
-            ctx1.arc(TONE_Xs[INLAY_POSITIONS[i]], FRETBOARD_Y + (FRETBOARD_HEIGHT / 6 * 2), INLAY_SIZE,
+            ctx1.arc(toneXs[INLAY_POSITIONS[i]], FRETBOARD_Y + (fretboardHeight / 6 * 2), INLAY_SIZE,
                 0, 2 * Math.PI);
             ctx1.fill();
             ctx1.beginPath();
-            ctx1.arc(TONE_Xs[INLAY_POSITIONS[i]], FRETBOARD_Y + (FRETBOARD_HEIGHT / 6 * 4), INLAY_SIZE,
+            ctx1.arc(toneXs[INLAY_POSITIONS[i]], FRETBOARD_Y + (fretboardHeight / 6 * 4), INLAY_SIZE,
                 0, 2 * Math.PI);
             ctx1.fill();
         } else {
-            ctx1.arc(TONE_Xs[INLAY_POSITIONS[i]], FRETBOARD_Y + FRETBOARD_HEIGHT / 2, INLAY_SIZE,
+            ctx1.arc(toneXs[INLAY_POSITIONS[i]], FRETBOARD_Y + fretboardHeight / 2, INLAY_SIZE,
                 0, 2 * Math.PI);
             ctx1.fill();
         }
         ctx1.fillStyle = INLAY_TEXT_COLOR;
         ctx1.fillText(""+INLAY_POSITIONS[i],
-            TONE_Xs[INLAY_POSITIONS[i]] + POS_NR_OFFSET + (INLAY_POSITIONS[i] > 9 ? DOUBLE_D_OFFSET : 0),
-            FRETBOARD_Y + FRETBOARD_HEIGHT + FB_NR_SPACING);
+            toneXs[INLAY_POSITIONS[i]] + POS_NR_OFFSET + (INLAY_POSITIONS[i] > 9 ? DOUBLE_D_OFFSET : 0),
+            FRETBOARD_Y + fretboardHeight + FB_NR_SPACING);
     }
 
     ctx1.fillStyle = STRING_COLOR;
-    for (let i = 0; i < STRING_Ys.length; i++) {
-        ctx1.fillRect(0, FRETBOARD_Y + STRING_Ys[i],FRETBOARD_X + FRETBOARD_WIDTH,i + 1);
+    for (let i = 0; i < stringYs.length; i++) {
+        ctx1.fillRect(0, FRETBOARD_Y + stringYs[i],FRETBOARD_X + FRETBOARD_WIDTH,i + 1);
     }
 
     ctx1.font = LEGEND_FONT;
     for (let i = 0; i < COLOR_SCHEME.length; i++) {
         ctx1.fillStyle = COLOR_SCHEME[i];
         ctx1.beginPath();
-        ctx1.arc(LEGEND_X + i * LEGEND_SPACING, LEGEND_Y, LABEL_SIZE, 0, 2 * Math.PI);
+        ctx1.arc(LEGEND_X + i * LEGEND_SPACING, legendY, LABEL_SIZE, 0, 2 * Math.PI);
         ctx1.fill();
         if (i === 0) {
             ctx1.lineWidth = ROOT_RING_WIDTH;
@@ -132,7 +201,7 @@ function drawFretboard() {
             ordIndic = "th";
         }
         ctx1.fillText((i+1) + ordIndic, LEGEND_X + (i * LEGEND_SPACING) + LABEL_TEXT_X_OFFSET,
-            LEGEND_Y + LABEL_TEXT_Y_OFFSET, LABEL_SIZE * 1.5);
+            legendY + LABEL_TEXT_Y_OFFSET, LABEL_SIZE * 1.5);
     }
 }
 
@@ -159,8 +228,8 @@ function calcToneXs() {
 
 function calcStringYs() {
     let stringYs = [];
-    for (let i = 0; i < TUNING.length; i++) {
-        let stringY = STRING_EDGE_SPACE + (i * ((FRETBOARD_HEIGHT - STRING_EDGE_SPACE * 2) / (TUNING.length - 1))) - i;
+    for (let i = 0; i < tuning.length; i++) {
+        let stringY = STRING_EDGE_SPACE + (i * ((fretboardHeight - STRING_EDGE_SPACE * 2) / (tuning.length - 1 || 1)));
         stringYs.push(stringY);
     }
     return stringYs;
@@ -276,8 +345,8 @@ function drawScale() {
     ctx2.font = LABEL_TEXT_FONT;
     ctx2.strokeStyle = ROOT_RING_COLOR;
     ctx2.lineWidth = ROOT_RING_WIDTH;
-    for (let i = 0; i < TUNING.length; i++) {
-        let reorderedSemitones = getReorderedSemitones(TUNING[i]);
+    for (let i = 0; i < tuning.length; i++) {
+        let reorderedSemitones = getReorderedSemitones(tuning[i]);
         for (let j = 0; j < scale.tones.length; j++) {
             let toneIndex = reorderedSemitones.indexOf(scale.tones[j].natural) +
                 parseInt(scale.tones[j].flatSharp);
@@ -287,9 +356,9 @@ function drawScale() {
             }
             toneIndex %= OCTAVE_FRET;
 
-            let x = TONE_Xs[toneIndex];
+            let x = toneXs[toneIndex];
 
-            let y = FRETBOARD_Y + STRING_Ys[i] + i;
+            let y = FRETBOARD_Y + stringYs[i] + i;
             ctx2.fillStyle = COLOR_SCHEME[scale.tones[j].interval - 1];
             ctx2.beginPath();
             ctx2.arc(x, y, LABEL_SIZE, 0, 2 * Math.PI);
@@ -305,16 +374,16 @@ function drawScale() {
             if (toneIndex <= 3) {
                 ctx2.fillStyle = COLOR_SCHEME[scale.tones[j].interval - 1];
                 ctx2.beginPath();
-                ctx2.arc(TONE_Xs[toneIndex + OCTAVE_FRET % TONE_Xs.length], y, LABEL_SIZE,
+                ctx2.arc(toneXs[toneIndex + OCTAVE_FRET % toneXs.length], y, LABEL_SIZE,
                     0, 2 * Math.PI);
                 ctx2.fill();
                 ctx2.fillStyle = LABEL_TEXT_COLOR;
                 ctx2.fillText(scale.tones[j].toString(),
-                    TONE_Xs[toneIndex + OCTAVE_FRET % TONE_Xs.length] + LABEL_TEXT_X_OFFSET,
+                    toneXs[toneIndex + OCTAVE_FRET % toneXs.length] + LABEL_TEXT_X_OFFSET,
                     y + LABEL_TEXT_Y_OFFSET, LABEL_SIZE * 1.5);
                 if (scale.tones[j].interval === 1) {
                     ctx2.beginPath();
-                    ctx2.arc(TONE_Xs[toneIndex + OCTAVE_FRET % TONE_Xs.length], y, LABEL_SIZE,
+                    ctx2.arc(toneXs[toneIndex + OCTAVE_FRET % toneXs.length], y, LABEL_SIZE,
                         0, 2 * Math.PI);
                     ctx2.stroke();
                 }

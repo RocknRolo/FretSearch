@@ -1,32 +1,21 @@
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
 }
 
 body {
     background-color: #222;
 }
 
-a {
-    display: flex;
-    justify-content: center;
-    margin-top: auto;
-    color: gray;
-}
-
-a:visited {
-    color: gray;
-}
-
-a:hover {
-    color: yellow;
-}
-
 #controls {
-    text-align: center;
-    margin: 1%;
+    width: 100%;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-evenly;
+    margin: 0%;
 }
+
 
 #scale_display {
     font-family: "courier new", sans-serif;
@@ -47,4 +36,19 @@ canvas {
 
 #canvas2 {
     z-index: 1;
+}
+
+a {
+    display: flex;
+    justify-content: center;
+    margin-top: auto;
+    color: gray;
+}
+
+a:visited {
+    color: gray;
+}
+
+a:hover {
+    color: yellow;
 }
