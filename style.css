@@ -38,6 +38,7 @@ canvas {
     z-index: 1;
 }
 
+/* This has to be fixed.. I hate CSS.. */
 a {
     display: flex;
     flex-direction: row;
