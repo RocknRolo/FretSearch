@@ -41,7 +41,7 @@ canvas {
 a {
     display: flex;
     justify-content: center;
-    margin-top: auto;
+    margin-bottom: auto;
     color: gray;
 }
 
