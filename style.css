@@ -42,6 +42,7 @@ a {
     display: flex;
     justify-content: center;
     margin-bottom: auto;
+    align-items: flex-end;
     color: gray;
 }
 
